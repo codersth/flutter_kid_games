@@ -1,4 +1,4 @@
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 class HitWordControlPane extends StatelessWidget {
   final DirectionCallback? onDirectionChanged;
@@ -8,31 +8,25 @@ class HitWordControlPane extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // Direction pane.
-      child: DirectionPane(),
+      child: _DirectionPane(onDirectionChanged: onDirectionChanged),
     );
   }
 }
 
-typedef DirectionCallback = void Function(Direction direction);
+/// A callback for direction changed by handler point, [directionOffsetX] and [directionOffsetY]
+/// from 0 to 1 express the movement weight with which the caller can choose to control the target's velocity.
+typedef DirectionCallback = void Function(double directionOffsetX, double directionOffsetY);
 
-enum Direction {
-  left,
-  up,
-  right,
-  down
-}
-
-/**
- * Direction pane to control the tank to move on the scene.
- */
-class DirectionPane extends StatefulWidget {
-  const DirectionPane({Key? key}) : super(key: key);
+/// Direction pane to control the tank to move on the scene.
+class _DirectionPane extends StatefulWidget {
+  final DirectionCallback? onDirectionChanged;
+  const _DirectionPane({Key? key, this.onDirectionChanged}) : super(key: key);
 
   @override
-  State<DirectionPane> createState() => _DirectionPaneState();
+  State<_DirectionPane> createState() => _DirectionPaneState();
 }
 
-class _DirectionPaneState extends State<DirectionPane> {
+class _DirectionPaneState extends State<_DirectionPane> {
   static const double size = 80;
 
   /// The size of handler point in the center of the area to control the direction
@@ -40,6 +34,7 @@ class _DirectionPaneState extends State<DirectionPane> {
   static const double handlerSize = size / 4;
   double directionAxisX = 0;
   double directionAxisY = 0;
+  late Timer directionTimer;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -56,27 +51,24 @@ class _DirectionPaneState extends State<DirectionPane> {
               borderRadius: BorderRadius.all(Radius.circular(handlerSize / 2)),
               color: Colors.yellow),
         ),
-        onPanDown: restoreDirection,
+        onPanDown: (_) => startSendDirection(),
         onPanUpdate: startDirectionMove,
-        onPanEnd: (DragEndDetails details) => restoreDirection(null),
-        onPanCancel: () => restoreDirection(null),
+        onPanEnd: (DragEndDetails details) => restoreDirection(),
+        onPanCancel: () => restoreDirection(),
       ),
       alignment: Alignment(directionAxisX, directionAxisY),
     );
   }
 
-  void restoreDirection(DragDownDetails? details) {
-    // debugPrint("startDirectionDown ${details.localPosition}");
-    debugPrint("restoreDirection");
-    setState(() {
-      directionAxisX = 0.0;
-      directionAxisY = 0.0;
+  void startSendDirection() {
+    // Start a timer to send the direction signal if the event is down.
+    Timer timer = Timer.periodic(Duration(milliseconds: 50), (timer) {
+      widget.onDirectionChanged?.call(directionAxisX, directionAxisY);
     });
+    directionTimer = timer;
   }
 
   void startDirectionMove(DragUpdateDetails details) {
-    debugPrint(
-        "startDirectionMove ${details.localPosition.dx} ${details.localPosition.dy}");
     // Retrieve the new alignment parameters when handler point has been dragged.
     double tempAxisX =
         details.localPosition.dx / handlerSize;
@@ -92,4 +84,16 @@ class _DirectionPaneState extends State<DirectionPane> {
       }
     });
   }
+
+  void restoreDirection() {
+    // debugPrint("startDirectionDown ${details.localPosition}");
+    debugPrint("restoreDirection");
+    // Cancel to send direction is event is end or cancel.
+    directionTimer.cancel();
+    setState(() {
+      directionAxisX = 0.0;
+      directionAxisY = 0.0;
+    });
+  }
+
 }

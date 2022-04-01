@@ -83,7 +83,9 @@ class _HitWordHomePageState extends State<HitWordHomePage>
 
   void tankFire() {
     setState(() {
-      bullets.add(HitWordBullet(axisX: tankAxisX, axisY: 0.6,
+      // Adjust an offset -0.3 prevent bullet appearing from the body of tank.
+      // HitWordBullet's Key is necessary for removing the special one.
+      bullets.add(HitWordBullet(key: Key("bullet_idx_${bullets.length}"),axisX: tankAxisX, axisY: tankAxisY - 0.3,
        dismissingCallback: remoteBullet,));
     });
   }

@@ -48,11 +48,12 @@ class _HitWordBulletState extends State<HitWordBullet>
       curve: Curves.linear,
     ).addListener(() {
       setState(() {
-        // Update bullet's location with the changed animated value. User -1.2 rather than -1.0
-        // so that the bullet disappeared when completely out of range.
-        _axisY = widget.axisY + (-1.2 - widget.axisY) * _controller.value;
+        // Update bullet's location with the changed animated value. The -2 just a value to ensure
+        // bullet could emit out of the screen.
+        _axisY = widget.axisY + -1 * _controller.value;
         // Detect if bullet out of range.
         if (1.0 == _controller.value.abs()) {
+
           widget.dismissingCallback?.call(widget);
         }
         widget.locationChangedCallback?.call(widget, _axisY);

@@ -1,21 +1,35 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 class HitWordControlPane extends StatelessWidget {
+
+  static const directionKey = Key("DirectionPane"), fireKey = Key("FirePane");
+
   final DirectionCallback? onDirectionChanged;
 
-  const HitWordControlPane({Key? key, this.onDirectionChanged}) : super(key: key);
+  final FireCallback? onFire;
+
+  const HitWordControlPane({Key? key, this.onDirectionChanged, this.onFire}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Padding(padding: const EdgeInsets.all(30),
+    child: Row(
+      textDirection: TextDirection.ltr,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       // Direction pane.
-      child: _DirectionPane(onDirectionChanged: onDirectionChanged),
-    );
+      children: [
+        _DirectionPane(key: directionKey, onDirectionChanged: onDirectionChanged),
+        FirePane(key: fireKey, onFire: onFire),
+      ],
+    ),);
   }
 }
 
 /// A callback for direction changed by handler point, [directionOffsetX] and [directionOffsetY]
 /// from 0 to 1 express the movement weight with which the caller can choose to control the target's velocity.
 typedef DirectionCallback = void Function(double directionOffsetX, double directionOffsetY);
+
+/// Call back for listening the fire button clicked.
+typedef FireCallback = void Function();
 
 /// Direction pane to control the tank to move on the scene.
 class _DirectionPane extends StatefulWidget {
@@ -95,5 +109,46 @@ class _DirectionPaneState extends State<_DirectionPane> {
       directionAxisY = 0.0;
     });
   }
-
 }
+
+class FirePane extends StatelessWidget {
+
+  final FireCallback? onFire;
+  Timer? fireTimer = null;
+  FirePane({Key? key, this.onFire}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      child: Image.asset("lib/images/ic_default_fight_fire.png"),
+      // onTapDown: (_) => fireOnce(),
+      onTap: fireOnce,
+      // onTapUp: (_) => fireOnce(),
+      // onTapCancel: fireOnce,
+      onLongPress: keepFire,
+      onLongPressUp: cancelKeepFire,
+      onLongPressCancel: cancelKeepFire,
+      onLongPressEnd: (_) => {
+        cancelKeepFire()
+      },
+    );
+  }
+
+  void fireOnce() {
+    onFire?.call();
+  }
+
+  /// Start a periodic timer to call [fireOnce].
+  void keepFire() {
+    if(fireTimer == null || !fireTimer!.isActive) {
+      fireTimer = Timer.periodic(Duration.zero, (timer) {
+        fireOnce();
+      });
+    }
+  }
+
+  void cancelKeepFire() {
+    fireTimer?.cancel();
+  }
+}
+

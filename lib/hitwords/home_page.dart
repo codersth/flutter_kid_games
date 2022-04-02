@@ -31,6 +31,8 @@ class _HitWordHomePageState extends State<HitWordHomePage>
   late AnimationController controller;
   late CurvedAnimation curve;
 
+  // For generate HitWordBullet's unique key while removing from list.
+  static int bulletGenerateIndex = 1;
   @override
   void initState() {
     // TODO: implement initState
@@ -84,8 +86,7 @@ class _HitWordHomePageState extends State<HitWordHomePage>
   void tankFire() {
     setState(() {
       // Adjust an offset -0.3 prevent bullet appearing from the body of tank.
-      // HitWordBullet's Key is necessary for removing the special one.
-      bullets.add(HitWordBullet(key: Key("bullet_idx_${bullets.length}"),axisX: tankAxisX, axisY: tankAxisY - 0.3,
+      bullets.add(HitWordBullet(key: Key("bullet_idx_${bulletGenerateIndex ++}"),axisX: tankAxisX, axisY: tankAxisY - 0.3,
        dismissingCallback: remoteBullet,));
     });
   }

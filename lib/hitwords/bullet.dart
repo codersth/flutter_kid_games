@@ -50,7 +50,7 @@ class _HitWordBulletState extends State<HitWordBullet>
       setState(() {
         // Update bullet's location with the changed animated value. The -2 just a value to ensure
         // bullet could emit out of the screen.
-        _axisY = widget.axisY + -1 * _controller.value;
+        _axisY = widget.axisY + -2 * _controller.value;
         // Detect if bullet out of range.
         if (1.0 == _controller.value.abs()) {
 

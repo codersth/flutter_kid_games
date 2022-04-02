@@ -1,32 +1,46 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-class HitWordControlPane extends StatelessWidget {
 
+class HitWordControlPane extends StatelessWidget {
   static const directionKey = Key("DirectionPane"), fireKey = Key("FirePane");
 
   final DirectionCallback? onDirectionChanged;
 
   final FireCallback? onFire;
 
-  const HitWordControlPane({Key? key, this.onDirectionChanged, this.onFire}) : super(key: key);
+  /// Emit interval used to control the bullet's velocity.
+  final bulletEmitInterval;
+  const HitWordControlPane(
+      {Key? key,
+      this.onDirectionChanged,
+      this.onFire,
+      this.bulletEmitInterval = 800})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Padding(padding: const EdgeInsets.all(30),
-    child: Row(
-      textDirection: TextDirection.ltr,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      // Direction pane.
-      children: [
-        _DirectionPane(key: directionKey, onDirectionChanged: onDirectionChanged),
-        FirePane(key: fireKey, onFire: onFire),
-      ],
-    ),);
+    return Padding(
+      padding: const EdgeInsets.all(30),
+      child: Row(
+        textDirection: TextDirection.ltr,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Direction pane.
+        children: [
+          _DirectionPane(
+              key: directionKey, onDirectionChanged: onDirectionChanged),
+          FirePane(
+              key: fireKey,
+              onFire: onFire,
+              bulletEmitInterval: bulletEmitInterval),
+        ],
+      ),
+    );
   }
 }
 
 /// A callback for direction changed by handler point, [directionOffsetX] and [directionOffsetY]
 /// from 0 to 1 express the movement weight with which the caller can choose to control the target's velocity.
-typedef DirectionCallback = void Function(double directionOffsetX, double directionOffsetY);
+typedef DirectionCallback = void Function(
+    double directionOffsetX, double directionOffsetY);
 
 /// Call back for listening the fire button clicked.
 typedef FireCallback = void Function();
@@ -84,16 +98,14 @@ class _DirectionPaneState extends State<_DirectionPane> {
 
   void startDirectionMove(DragUpdateDetails details) {
     // Retrieve the new alignment parameters when handler point has been dragged.
-    double tempAxisX =
-        details.localPosition.dx / handlerSize;
-    double tempAxisY =
-        details.localPosition.dy / handlerSize;
+    double tempAxisX = details.localPosition.dx / handlerSize;
+    double tempAxisY = details.localPosition.dy / handlerSize;
     setState(() {
       // Update the location of handler point if the handler not move outside of area.
-      if(tempAxisX.abs() <= 1.0) {
+      if (tempAxisX.abs() <= 1.0) {
         directionAxisX = tempAxisX;
       }
-      if(tempAxisY.abs() <= 1.0) {
+      if (tempAxisY.abs() <= 1.0) {
         directionAxisY = tempAxisY;
       }
     });
@@ -111,44 +123,56 @@ class _DirectionPaneState extends State<_DirectionPane> {
   }
 }
 
-class FirePane extends StatelessWidget {
-
+class FirePane extends StatefulWidget {
   final FireCallback? onFire;
+  final bulletEmitInterval;
+  FirePane({Key? key, this.onFire, this.bulletEmitInterval}) : super(key: key);
+
+  @override
+  State<FirePane> createState() => _FirePaneState();
+}
+
+class _FirePaneState extends State<FirePane> {
   Timer? fireTimer = null;
-  FirePane({Key? key, this.onFire}) : super(key: key);
+  bool isKeepEmitting = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      child: Image.asset("lib/images/ic_default_fight_fire.png"),
-      // onTapDown: (_) => fireOnce(),
-      onTap: fireOnce,
-      // onTapUp: (_) => fireOnce(),
-      // onTapCancel: fireOnce,
-      onLongPress: keepFire,
-      onLongPressUp: cancelKeepFire,
-      onLongPressCancel: cancelKeepFire,
-      onLongPressEnd: (_) => {
-        cancelKeepFire()
-      },
-    );
+        child: Image.asset("lib/images/ic_default_fight_fire.png"),
+        onTapDown: (_) => fireOnce(),
+        onTap: fireOnce,
+        onTapUp: (_) => fireOnce(),
+        onTapCancel: fireOnce,
+        onLongPressDown: (_) => {
+          keepFire()
+        },
+        onLongPress: keepFire,
+        onLongPressUp: cancelKeepFire,
+        onLongPressCancel: cancelKeepFire);
   }
 
   void fireOnce() {
-    onFire?.call();
+    widget.onFire?.call();
   }
 
   /// Start a periodic timer to call [fireOnce].
   void keepFire() {
-    if(fireTimer == null || !fireTimer!.isActive) {
-      fireTimer = Timer.periodic(Duration.zero, (timer) {
+    debugPrint("keepFire1");
+    isKeepEmitting = true;
+    fireTimer = Timer.periodic(
+        Duration(milliseconds: widget.bulletEmitInterval), (timer) {
+      if (isKeepEmitting) {
         fireOnce();
-      });
-    }
+      } else {
+        fireTimer?.cancel();
+      }
+    });
   }
 
   void cancelKeepFire() {
-    fireTimer?.cancel();
+    setState(() {
+      isKeepEmitting = false;
+    });
   }
 }
-

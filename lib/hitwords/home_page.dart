@@ -5,6 +5,7 @@ import 'package:flutter_kid_games/hitwords/bullet.dart';
 import 'package:flutter_kid_games/hitwords/scene.dart';
 import 'package:flutter_kid_games/hitwords/tank.dart';
 import 'package:flutter_kid_games/common/utils.dart';
+import 'package:flutter_kid_games/hitwords/words_generator.dart';
 import 'control.dart';
 
 class HitWordHomePage extends StatefulWidget {
@@ -33,6 +34,8 @@ class _HitWordHomePageState extends State<HitWordHomePage>
 
   // For generate HitWordBullet's unique key while removing from list.
   static int bulletGenerateIndex = 1;
+
+  bool isGameStarted = false;
   @override
   void initState() {
     // TODO: implement initState
@@ -53,13 +56,7 @@ class _HitWordHomePageState extends State<HitWordHomePage>
       child: Stack(
         children: [
           HitWordScene(),
-          Container(
-            alignment: Alignment(-1, 1),
-            child: HitWordControlPane(
-              onDirectionChanged: (x, y) => moveTank(x, y),
-              onFire: tankFire,
-            ),
-          ),
+          WordsGenerator(isStarted: isGameStarted,),
           Container(
             alignment: Alignment(tankAxisX, tankAxisY),
             child: HitWordTank(size: 60.0),
@@ -67,6 +64,13 @@ class _HitWordHomePageState extends State<HitWordHomePage>
           Container(
             child: Stack(
               children: bullets,
+            ),
+          ),
+          Container(
+            alignment: Alignment(-1, 1),
+            child: HitWordControlPane(
+              onDirectionChanged: (x, y) => moveTank(x, y),
+              onFire: tankFire,
             ),
           ),
         ],
@@ -88,6 +92,7 @@ class _HitWordHomePageState extends State<HitWordHomePage>
       // Adjust an offset -0.3 prevent bullet appearing from the body of tank.
       bullets.add(HitWordBullet(key: Key("bullet_idx_${bulletGenerateIndex ++}"),axisX: tankAxisX, axisY: tankAxisY - 0.3,
        dismissingCallback: remoteBullet,));
+      isGameStarted = true;
     });
   }
 
